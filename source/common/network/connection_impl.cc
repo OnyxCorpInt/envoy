@@ -490,9 +490,11 @@ void ConnectionImpl::onReadReady() {
   }
 
   read_end_stream_ |= result.end_stream_read_;
-  if (result.bytes_processed_ != 0 || result.end_stream_read_) {
-    // Skip onRead if no bytes were processed. For instance, if the connection was closed without
-    // producing more data.
+
+  if (new_buffer_size != 0 || result.end_stream_read_) {
+    // We still want to trigger onRead if no bytes were processed, as readDisable's enable path fires a
+    // read ready event if previously buffered data is available. This check was previously introduced
+    // during #2312 but I don't think anybody caught the readDisable case.
     onRead(new_buffer_size);
   }
 
